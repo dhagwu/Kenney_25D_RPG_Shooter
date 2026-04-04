@@ -55,18 +55,28 @@ public class SettingsPanelController : MonoBehaviour
 
     private void ApplyMusicVolume(float normalizedValue)
     {
-        if (audioMixer == null)
-            return;
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat(musicVolumeParameter, NormalizedToDb(normalizedValue));
+        }
 
-        audioMixer.SetFloat(musicVolumeParameter, NormalizedToDb(normalizedValue));
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetMusicVolume(normalizedValue);
+        }
     }
 
     private void ApplySFXVolume(float normalizedValue)
     {
-        if (audioMixer == null)
-            return;
+        if (audioMixer != null)
+        {
+            audioMixer.SetFloat(sfxVolumeParameter, NormalizedToDb(normalizedValue));
+        }
 
-        audioMixer.SetFloat(sfxVolumeParameter, NormalizedToDb(normalizedValue));
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.SetSFXVolume(normalizedValue);
+        }
     }
 
     private float NormalizedToDb(float value)

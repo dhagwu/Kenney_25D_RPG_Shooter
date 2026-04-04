@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    public static event Action<EnemyHealth> OnEnemyDied;
+    public static event Action OnEnemyDied;
+
     public static int TotalKills { get; private set; }
 
     [SerializeField] private float maxHp = 30f;
@@ -25,10 +26,11 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (isDead)
-            return;
+        if (isDead) return;
+        if (damage <= 0f) return;
 
         currentHp -= damage;
+
         if (!isDead && AudioManager.Instance != null && hurtClip != null)
         {
             AudioManager.Instance.PlaySFX(hurtClip, 1f);
@@ -42,12 +44,13 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        if (isDead)
-            return;
+        if (isDead) return;
 
         isDead = true;
         TotalKills++;
-        OnEnemyDied?.Invoke(this);
+
+        OnEnemyDied?.Invoke();
+
         if (AudioManager.Instance != null && deathClip != null)
         {
             AudioManager.Instance.PlaySFX(deathClip, 1f);

@@ -3,10 +3,16 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
-    [SerializeField] private string gameplaySceneName = "TestCombat";
+    [SerializeField] private string gameplaySceneName = "Hub";
 
     public void StartGame()
     {
+        if (GameSession.Instance != null)
+        {
+            GameSession.Instance.ResetSession();
+            GameSession.Instance.AddBonusMaxHealth(20);
+        }
+
         SceneManager.LoadScene(gameplaySceneName);
     }
 

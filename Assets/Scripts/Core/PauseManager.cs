@@ -10,6 +10,7 @@ public class PauseManager : MonoBehaviour
     [Header("Scenes")]
     [SerializeField] private string restartSceneName = "TestCombat";
     [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [SerializeField] private string Hub = "Hub";
     [SerializeField] private GameObject settingsPanel;
     [SerializeField] private PlayerMotor playerMotor;
     [SerializeField] private PlayerAimController playerAimController;
@@ -79,6 +80,11 @@ public class PauseManager : MonoBehaviour
     {
         SetPaused(false);
         SceneManager.LoadScene(mainMenuSceneName);
+    }
+    public void ReturnToHub()
+    {
+        SetPaused(false);
+        SceneManager.LoadScene(Hub);
     }
 
     private void SetPaused(bool paused)
