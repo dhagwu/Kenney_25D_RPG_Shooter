@@ -21,19 +21,26 @@ public class EnemyDropper : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        EnemyHealth.OnEnemyDied += HandleEnemyDied;
+        hasDropped = false;
+    }
+
     private void OnDisable()
     {
         EnemyHealth.OnEnemyDied -= HandleEnemyDied;
     }
 
-
-    private void HandleEnemyDied()
+    private void HandleEnemyDied(EnemyHealth deadEnemy)
     {
-        // 确保每次敌人死亡后金币掉落
+        if (deadEnemy != enemyHealth)
+            return;
+
         if (hasDropped)
             return;
 
-        hasDropped = true; // 标记已掉落
+        hasDropped = true;
 
         if (coinPickupPrefab == null)
             return;
@@ -47,12 +54,5 @@ public class EnemyDropper : MonoBehaviour
             int goldAmount = Random.Range(minGold, maxGold + 1);
             currencyPickup.SetAmount(goldAmount);
         }
-    }
-
-    // 每次敌人复活时重置 hasDropped
-    private void OnEnable()
-    {
-        EnemyHealth.OnEnemyDied += HandleEnemyDied;
-        hasDropped = false;  // 在每次启用时重置
     }
 }

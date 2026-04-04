@@ -52,7 +52,7 @@ public class CombatHUDPresenter : MonoBehaviour
         }
     }
 
-    private void HandleEnemyDied()
+    private void HandleEnemyDied(EnemyHealth enemy)
     {
         RefreshEnemyInfo();
     }

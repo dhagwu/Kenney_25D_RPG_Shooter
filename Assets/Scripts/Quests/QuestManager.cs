@@ -61,7 +61,7 @@ public class QuestManager : MonoBehaviour
         NotifyChanged();
     }
 
-    private void HandleEnemyDied()
+    private void HandleEnemyDied(EnemyHealth enemy)
     {
         AddProgress(QuestType.KillEnemies, 1);
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    public static event Action OnEnemyDied;
+    public static event Action<EnemyHealth> OnEnemyDied;
 
     public static int TotalKills { get; private set; }
 
@@ -49,7 +49,7 @@ public class EnemyHealth : MonoBehaviour
         isDead = true;
         TotalKills++;
 
-        OnEnemyDied?.Invoke();
+        OnEnemyDied?.Invoke(this);
 
         if (AudioManager.Instance != null && deathClip != null)
         {
