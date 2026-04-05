@@ -48,20 +48,11 @@ public class QuestManager : MonoBehaviour
             quests = new List<QuestData>();
         }
 
-        while (quests.Count < 3)
+        if (quests.Count == 0)
         {
-            if (quests.Count == 0)
-            {
-                quests.Add(CreateKillQuest());
-            }
-            else if (quests.Count == 1)
-            {
-                quests.Add(CreateGoldQuest());
-            }
-            else if (quests.Count == 2)
-            {
-                quests.Add(CreateShopQuest());
-            }
+            quests.Add(CreateKillQuest());
+            quests.Add(CreateGoldQuest());
+            quests.Add(CreateShopQuest());
         }
     }
 
@@ -215,19 +206,94 @@ public class QuestManager : MonoBehaviour
             : $"Reward claimed: {quest.questName}";
 
         Debug.Log($"[QuestManager] {resultMessage}");
-
         NotifyChanged();
         return true;
     }
 
+    public List<QuestSaveData> BuildSaveDataList()
+    {
+        List<QuestSaveData> result = new List<QuestSaveData>();
+
+        for (int i = 0; i < quests.Count; i++)
+        {
+            QuestData quest = quests[i];
+
+            result.Add(new QuestSaveData
+            {
+                questName = quest.questName,
+                questType = quest.questType,
+                currentAmount = quest.currentAmount,
+                isCompleted = quest.isCompleted,
+                rewardClaimed = quest.rewardClaimed
+            });
+        }
+
+        return result;
+    }
+
+    public void ApplySaveDataList(List<QuestSaveData> saveList)
+    {
+        EnsureDefaultQuests();
+
+        ResetAllQuests(false);
+
+        if (saveList == null)
+        {
+            NotifyChanged();
+            return;
+        }
+
+        for (int i = 0; i < quests.Count; i++)
+        {
+            QuestData quest = quests[i];
+            QuestSaveData matched = FindQuestSaveData(saveList, quest);
+
+            if (matched == null) continue;
+
+            quest.currentAmount = Mathf.Clamp(matched.currentAmount, 0, quest.targetAmount);
+            quest.isCompleted = matched.isCompleted || quest.currentAmount >= quest.targetAmount;
+            quest.rewardClaimed = matched.rewardClaimed;
+        }
+
+        NotifyChanged();
+    }
+
+    private QuestSaveData FindQuestSaveData(List<QuestSaveData> saveList, QuestData quest)
+    {
+        for (int i = 0; i < saveList.Count; i++)
+        {
+            QuestSaveData item = saveList[i];
+
+            if (item.questType == quest.questType)
+            {
+                return item;
+            }
+
+            if (!string.IsNullOrEmpty(item.questName) && item.questName == quest.questName)
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
     public void ResetAllQuests()
+    {
+        ResetAllQuests(true);
+    }
+
+    private void ResetAllQuests(bool notify)
     {
         for (int i = 0; i < quests.Count; i++)
         {
             quests[i].ResetProgress();
         }
 
-        NotifyChanged();
+        if (notify)
+        {
+            NotifyChanged();
+        }
     }
 
     private void NotifyChanged()

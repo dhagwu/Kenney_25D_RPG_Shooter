@@ -8,13 +8,21 @@ public class WaveUIPresenter : MonoBehaviour
     [SerializeField] private EnemySpawner enemySpawner;
     [SerializeField] private TMP_Text waveText;
     [SerializeField] private TMP_Text waveStatusText;
-    [SerializeField] private BattleResultPanelPresenter battleResultPanelPresenter;
+    [SerializeField] private GameObject victoryPanel;
+    [SerializeField] private VictoryResultBinder victoryResultBinder;
+
+    [Header("HUD Panels To Hide On Victory")]
+    [SerializeField] private GameObject wavePanel;
+    [SerializeField] private GameObject currencyPanel;
+    [SerializeField] private GameObject weaponPanel;
+    [SerializeField] private GameObject enemyInfoPanel;
+    [SerializeField] private GameObject hpPanel;
 
     [Header("Status Timing")]
     [SerializeField] private float statusDisplayTime = 2f;
 
     private Coroutine statusCoroutine;
-    private bool resultPanelShown;
+    private bool victoryShown;
 
     private void OnEnable()
     {
@@ -37,21 +45,24 @@ public class WaveUIPresenter : MonoBehaviour
             enemySpawner = FindFirstObjectByType<EnemySpawner>();
         }
 
-        if (battleResultPanelPresenter == null)
+        if (victoryResultBinder == null && victoryPanel != null)
         {
-            battleResultPanelPresenter = FindFirstObjectByType<BattleResultPanelPresenter>();
+            victoryResultBinder = victoryPanel.GetComponent<VictoryResultBinder>();
         }
 
-        resultPanelShown = false;
+        victoryShown = false;
 
-        if (battleResultPanelPresenter != null)
+        // 场景开始时确保 HUD 是开着的
+        SetGameplayHudVisible(true);
+
+        if (victoryPanel != null)
         {
-            battleResultPanelPresenter.HideImmediately();
+            victoryPanel.SetActive(false);
         }
 
         if (waveStatusText != null)
         {
-            waveStatusText.text = "";
+            waveStatusText.text = string.Empty;
         }
 
         RefreshWaveText();
@@ -67,12 +78,9 @@ public class WaveUIPresenter : MonoBehaviour
     {
         RefreshWaveText(currentWave, maxWave);
 
-        // 关键兜底：
-        // 只要“当前清掉的是最后一波”，就直接打开结算面板，
-        // 不再完全依赖 OnAllWavesFinished 事件。
         if (currentWave >= maxWave)
         {
-            OpenBattleResultPanel("All Waves Cleared");
+            ShowVictory();
             return;
         }
 
@@ -81,13 +89,13 @@ public class WaveUIPresenter : MonoBehaviour
 
     private void HandleAllWavesFinished()
     {
-        OpenBattleResultPanel("All Waves Cleared");
+        ShowVictory();
     }
 
-    private void OpenBattleResultPanel(string statusMessage)
+    private void ShowVictory()
     {
-        if (resultPanelShown) return;
-        resultPanelShown = true;
+        if (victoryShown) return;
+        victoryShown = true;
 
         if (statusCoroutine != null)
         {
@@ -97,19 +105,52 @@ public class WaveUIPresenter : MonoBehaviour
 
         if (waveStatusText != null)
         {
-            waveStatusText.text = statusMessage;
+            waveStatusText.text = "All Waves Cleared";
         }
 
-        if (battleResultPanelPresenter != null)
+        // 先隐藏关卡 HUD
+        SetGameplayHudVisible(false);
+
+        if (victoryPanel != null)
         {
-            battleResultPanelPresenter.ShowResultPanel();
-        }
-        else
-        {
-            Debug.LogWarning("[WaveUIPresenter] BattleResultPanelPresenter is missing.");
+            victoryPanel.SetActive(true);
+            victoryPanel.transform.SetAsLastSibling();
         }
 
-        Debug.Log("[WaveUIPresenter] Battle result panel opened.");
+        if (victoryResultBinder != null)
+        {
+            victoryResultBinder.RefreshResult();
+        }
+
+        Debug.Log("[WaveUIPresenter] Victory panel shown.");
+    }
+
+    private void SetGameplayHudVisible(bool visible)
+    {
+        if (hpPanel != null)
+        {
+            hpPanel.SetActive(visible);
+        }
+
+        if (wavePanel != null)
+        {
+            wavePanel.SetActive(visible);
+        }
+
+        if (currencyPanel != null)
+        {
+            currencyPanel.SetActive(visible);
+        }
+
+        if (weaponPanel != null)
+        {
+            weaponPanel.SetActive(visible);
+        }
+
+        if (enemyInfoPanel != null)
+        {
+            enemyInfoPanel.SetActive(visible);
+        }
     }
 
     private void RefreshWaveText()
@@ -144,10 +185,9 @@ public class WaveUIPresenter : MonoBehaviour
         waveStatusText.text = message;
         yield return new WaitForSeconds(statusDisplayTime);
 
-        // 如果结果面板已经打开，就不要再清空最终状态提示
-        if (!resultPanelShown && waveStatusText != null)
+        if (!victoryShown && waveStatusText != null)
         {
-            waveStatusText.text = "";
+            waveStatusText.text = string.Empty;
         }
 
         statusCoroutine = null;

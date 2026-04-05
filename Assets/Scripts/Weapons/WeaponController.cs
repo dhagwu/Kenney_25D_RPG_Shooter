@@ -56,6 +56,15 @@ public class WeaponController : MonoBehaviour
         HandleFireInput();
         RefreshHUD();
     }
+    private float GetFinalDamage(float baseDamage)
+    {
+        if (GameSession.Instance == null)
+        {
+            return baseDamage;
+        }
+
+        return baseDamage * (1f + GameSession.Instance.BonusDamagePercent);
+    }
 
     private void InitializeSlot(int index)
     {
@@ -171,7 +180,7 @@ public class WeaponController : MonoBehaviour
 
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(current.damage);
+                enemyHealth.TakeDamage(GetFinalDamage(current.damage));
             }
 
             Debug.DrawLine(firePoint.position, hit.point, Color.red, 0.15f);

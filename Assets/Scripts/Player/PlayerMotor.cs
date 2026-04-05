@@ -63,9 +63,21 @@ public class PlayerMotor : MonoBehaviour
 
         verticalVelocity += gravity * Time.deltaTime;
 
-        Vector3 velocity = move * moveSpeed;
+        Vector3 velocity = move * GetFinalMoveSpeed();
         velocity.y = verticalVelocity;
 
         characterController.Move(velocity * Time.deltaTime);
+    }
+
+    private float GetFinalMoveSpeed()
+    {
+        float bonusPercent = 0f;
+
+        if (GameSession.Instance != null)
+        {
+            bonusPercent = GameSession.Instance.BonusMoveSpeedPercent;
+        }
+
+        return moveSpeed * (1f + bonusPercent);
     }
 }

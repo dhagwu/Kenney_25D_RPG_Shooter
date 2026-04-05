@@ -18,7 +18,6 @@ public class VictoryFlowController : MonoBehaviour
         SceneManager.LoadScene(hubSceneName);
     }
 
-    // 兼容旧按钮绑定：如果你的按钮还绑着这个旧名字，也会回 Hub
     public void ReturnToMainMenu()
     {
         ReturnToHub();

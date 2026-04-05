@@ -64,32 +64,15 @@ public class BattleResultPanelPresenter : MonoBehaviour
             battleResultTracker.PrepareSummary();
         }
 
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(false);
-        }
-
-        if (settingsPanel != null)
-        {
-            settingsPanel.SetActive(false);
-        }
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
 
         resultPanel.SetActive(true);
-
-        // 强制把 VictoryPanel 顶到 HUD 最上层
         resultPanel.transform.SetAsLastSibling();
 
-        // 强制把所有子节点都激活，避免某些文本或按钮被单独关掉
         for (int i = 0; i < resultPanel.transform.childCount; i++)
         {
             resultPanel.transform.GetChild(i).gameObject.SetActive(true);
-        }
-
-        RectTransform rect = resultPanel.GetComponent<RectTransform>();
-        if (rect != null)
-        {
-            rect.localScale = Vector3.one;
-            rect.anchoredPosition3D = Vector3.zero;
         }
 
         if (canvasGroup != null)
@@ -100,14 +83,7 @@ public class BattleResultPanelPresenter : MonoBehaviour
         }
 
         RefreshUI();
-
         Time.timeScale = 0f;
-
-        Debug.Log(
-            $"[BattleResultPanelPresenter] Show -> panel={resultPanel.name}, " +
-            $"activeSelf={resultPanel.activeSelf}, activeInHierarchy={resultPanel.activeInHierarchy}, " +
-            $"childCount={resultPanel.transform.childCount}"
-        );
     }
 
     public void HideImmediately()
@@ -128,78 +104,31 @@ public class BattleResultPanelPresenter : MonoBehaviour
 
     public void RefreshUI()
     {
-        if (titleText != null)
-        {
-            titleText.text = "Battle Results";
-        }
-
-        if (battleResultTracker == null)
-        {
-            SetFallbackTexts();
-            return;
-        }
+        if (titleText != null) titleText.text = "Battle Results";
+        if (battleResultTracker == null) return;
 
         if (killsText != null)
-        {
             killsText.text = $"Kills: {battleResultTracker.KillsThisBattle}";
-        }
 
         if (goldText != null)
-        {
             goldText.text = $"Gold Gained: +{battleResultTracker.GoldGained}";
-        }
 
         if (wavesText != null)
-        {
-            if (battleResultTracker.MaxWaveCount > 0)
-            {
-                wavesText.text = $"Waves Cleared: {battleResultTracker.WavesCleared}/{battleResultTracker.MaxWaveCount}";
-            }
-            else
-            {
-                wavesText.text = $"Waves Cleared: {battleResultTracker.WavesCleared}";
-            }
-        }
+            wavesText.text = $"Waves Cleared: {battleResultTracker.WavesCleared}/{battleResultTracker.MaxWaveCount}";
 
         if (battleHealText != null)
-        {
             battleHealText.text = $"Battle Heal Used: {(battleResultTracker.UsedBattleHeal ? "Yes" : "No")}";
-        }
 
         if (supplyPackText != null)
-        {
             supplyPackText.text = $"Supply Pack Used: {(battleResultTracker.UsedSupplyPack ? "Yes" : "No")}";
-        }
 
         if (killQuestText != null)
-        {
             killQuestText.text = $"Kill Quest: {battleResultTracker.BuildQuestProgressSummary(QuestType.KillEnemies)}";
-        }
 
         if (goldQuestText != null)
-        {
             goldQuestText.text = $"Gold Quest: {battleResultTracker.BuildQuestProgressSummary(QuestType.CollectGold)}";
-        }
 
         if (hintText != null)
-        {
             hintText.text = "Return to Hub to claim rewards and continue progression.";
-        }
-    }
-
-    private void SetFallbackTexts()
-    {
-        if (killsText != null) killsText.text = "Kills: 0";
-        if (goldText != null) goldText.text = "Gold Gained: +0";
-        if (wavesText != null) wavesText.text = "Waves Cleared: 0";
-        if (battleHealText != null) battleHealText.text = "Battle Heal Used: No";
-        if (supplyPackText != null) supplyPackText.text = "Supply Pack Used: No";
-        if (killQuestText != null) killQuestText.text = "Kill Quest: Not tracked";
-        if (goldQuestText != null) goldQuestText.text = "Gold Quest: Not tracked";
-
-        if (hintText != null)
-        {
-            hintText.text = "Battle result data not found.";
-        }
     }
 }

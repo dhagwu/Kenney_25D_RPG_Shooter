@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,6 +13,8 @@ public class HubFlowController : MonoBehaviour
     [Header("Status Panel")]
     [SerializeField] private TMP_Text bonusHpText;
     [SerializeField] private TMP_Text goldMultiplierText;
+    [SerializeField] private TMP_Text moveSpeedText;
+    [SerializeField] private TMP_Text damageText;
     [SerializeField] private TMP_Text battleHealText;
     [SerializeField] private TMP_Text supplyCountText;
 
@@ -20,11 +25,12 @@ public class HubFlowController : MonoBehaviour
     [SerializeField] private string combatSceneName = "TestCombat";
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
+    private MethodInfo cachedSaveMethod;
+
     private void OnEnable()
     {
         GameSession.OnGoldChanged += HandleGoldChanged;
         GameSession.OnProgressionChanged += HandleProgressionChanged;
-
         RefreshAll();
     }
 
@@ -71,6 +77,8 @@ public class HubFlowController : MonoBehaviour
         {
             if (bonusHpText != null) bonusHpText.text = "Max HP Bonus: +0";
             if (goldMultiplierText != null) goldMultiplierText.text = "Gold Multiplier: x1.0";
+            if (moveSpeedText != null) moveSpeedText.text = "Move Speed Bonus: +0%";
+            if (damageText != null) damageText.text = "Damage Bonus: +0%";
             if (battleHealText != null) battleHealText.text = "Battle Heal Ready: No";
             if (supplyCountText != null) supplyCountText.text = "Supply Count: 0";
             return;
@@ -82,6 +90,12 @@ public class HubFlowController : MonoBehaviour
         if (goldMultiplierText != null)
             goldMultiplierText.text = $"Gold Multiplier: x{GameSession.Instance.GoldGainMultiplier:0.0#}";
 
+        if (moveSpeedText != null)
+            moveSpeedText.text = $"Move Speed Bonus: +{GameSession.Instance.BonusMoveSpeedPercent * 100f:0}%";
+
+        if (damageText != null)
+            damageText.text = $"Damage Bonus: +{GameSession.Instance.BonusDamagePercent * 100f:0}%";
+
         if (battleHealText != null)
             battleHealText.text = $"Battle Heal Ready: {(GameSession.Instance.AutoRestoreHealthOnBattleStart ? "Yes" : "No")}";
 
@@ -91,11 +105,13 @@ public class HubFlowController : MonoBehaviour
 
     public void OnClickStartCombat()
     {
+        TryAutoSave();
         SceneManager.LoadScene(combatSceneName);
     }
 
     public void OnClickBackToMenu()
     {
+        TryAutoSave();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
@@ -104,6 +120,33 @@ public class HubFlowController : MonoBehaviour
         if (shopManager != null)
         {
             shopManager.OpenShop();
+        }
+    }
+
+    private void TryAutoSave()
+    {
+        try
+        {
+            if (cachedSaveMethod == null)
+            {
+                Type saveSystemType = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
+                    .FirstOrDefault(t => t.Name == "SaveSystem");
+
+                if (saveSystemType != null)
+                {
+                    cachedSaveMethod = saveSystemType.GetMethod(
+                        "SaveGame",
+                        BindingFlags.Public | BindingFlags.Static);
+                }
+            }
+
+            cachedSaveMethod?.Invoke(null, null);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[HubFlowController] Auto save skipped: {ex.Message}");
         }
     }
 }

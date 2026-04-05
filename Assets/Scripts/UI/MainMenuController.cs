@@ -1,24 +1,42 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
-    [SerializeField] private string gameplaySceneName = "Hub";
+    [SerializeField] private string bootSceneName = "Boot";
+    [SerializeField] private Button continueButton;
+
+    private void Start()
+    {
+        RefreshContinueButton();
+    }
 
     public void StartGame()
     {
-        if (GameSession.Instance != null)
+        LaunchRequest.PendingAction = LaunchAction.NewGame;
+        SceneManager.LoadScene(bootSceneName);
+    }
+
+    public void ContinueGame()
+    {
+        if (!SaveManager.HasSaveFileOnDisk())
         {
-            GameSession.Instance.ResetSession();
-            GameSession.Instance.AddBonusMaxHealth(20);
+            Debug.LogWarning("[MainMenuController] Continue failed: no save file.");
+            RefreshContinueButton();
+            return;
         }
 
-        if (QuestManager.Instance != null)
-        {
-            QuestManager.Instance.ResetAllQuests();
-        }
+        LaunchRequest.PendingAction = LaunchAction.Continue;
+        SceneManager.LoadScene(bootSceneName);
+    }
 
-        SceneManager.LoadScene(gameplaySceneName);
+    public void RefreshContinueButton()
+    {
+        if (continueButton != null)
+        {
+            continueButton.interactable = SaveManager.HasSaveFileOnDisk();
+        }
     }
 
     public void QuitGame()
