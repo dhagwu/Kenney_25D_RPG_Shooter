@@ -5,13 +5,33 @@ public class BattleSessionApplier : MonoBehaviour
     [Header("Scene References")]
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private PlayerCurrency playerCurrency;
+    [SerializeField] private BattleResultTracker battleResultTracker;
 
     [Header("Supply Pack Settings")]
     [SerializeField] private int supplyPackBonusGold = 25;
 
     private void Start()
     {
+        AutoFindReferencesIfNeeded();
         ApplyBattleStartEffects();
+    }
+
+    private void AutoFindReferencesIfNeeded()
+    {
+        if (playerHealth == null)
+        {
+            playerHealth = FindFirstObjectByType<PlayerHealth>();
+        }
+
+        if (playerCurrency == null)
+        {
+            playerCurrency = FindFirstObjectByType<PlayerCurrency>();
+        }
+
+        if (battleResultTracker == null)
+        {
+            battleResultTracker = FindFirstObjectByType<BattleResultTracker>();
+        }
     }
 
     private void ApplyBattleStartEffects()
@@ -28,13 +48,17 @@ public class BattleSessionApplier : MonoBehaviour
 
     private void ApplyBattleHeal()
     {
-        if (!GameSession.Instance.AutoRestoreHealthOnBattleStart)
-            return;
+        if (!GameSession.Instance.AutoRestoreHealthOnBattleStart) return;
 
         if (playerHealth != null)
         {
             playerHealth.RestoreToFull();
             Debug.Log("[BattleSessionApplier] Applied Battle Heal -> RestoreToFull");
+        }
+
+        if (battleResultTracker != null)
+        {
+            battleResultTracker.MarkBattleHealUsed();
         }
 
         GameSession.Instance.ConsumeAutoRestoreHealthOnBattleStart();
@@ -43,9 +67,12 @@ public class BattleSessionApplier : MonoBehaviour
     private void ApplySupplyPack()
     {
         bool consumed = GameSession.Instance.ConsumeBattleSupply();
+        if (!consumed) return;
 
-        if (!consumed)
-            return;
+        if (battleResultTracker != null)
+        {
+            battleResultTracker.MarkSupplyPackUsed();
+        }
 
         if (playerCurrency != null)
         {

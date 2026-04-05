@@ -13,6 +13,11 @@ public class MainMenuController : MonoBehaviour
             GameSession.Instance.AddBonusMaxHealth(20);
         }
 
+        if (QuestManager.Instance != null)
+        {
+            QuestManager.Instance.ResetAllQuests();
+        }
+
         SceneManager.LoadScene(gameplaySceneName);
     }
 

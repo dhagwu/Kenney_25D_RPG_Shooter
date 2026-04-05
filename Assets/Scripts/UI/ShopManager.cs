@@ -42,7 +42,6 @@ public class ShopManager : MonoBehaviour
     {
         GameSession.OnGoldChanged += HandleGoldChanged;
         GameSession.OnProgressionChanged += HandleProgressionChanged;
-
         RefreshUI();
     }
 
@@ -92,6 +91,8 @@ public class ShopManager : MonoBehaviour
         }
 
         GameSession.Instance.AddBonusMaxHealth(healthUpgradeAmount);
+        NotifyQuestShopPurchase();
+
         SetFeedback($"Purchased: Max HP +{healthUpgradeAmount}");
         RefreshUI();
     }
@@ -107,6 +108,8 @@ public class ShopManager : MonoBehaviour
         }
 
         GameSession.Instance.AddGoldGainMultiplier(goldMultiplierAmount);
+        NotifyQuestShopPurchase();
+
         SetFeedback($"Purchased: Gold Gain +{goldMultiplierAmount * 100f:0}%");
         RefreshUI();
     }
@@ -122,6 +125,8 @@ public class ShopManager : MonoBehaviour
         }
 
         GameSession.Instance.SetAutoRestoreHealthOnBattleStart(true);
+        NotifyQuestShopPurchase();
+
         SetFeedback("Purchased: Battle Heal ready.");
         RefreshUI();
     }
@@ -137,14 +142,23 @@ public class ShopManager : MonoBehaviour
         }
 
         GameSession.Instance.AddBattleSupply(supplyPackAmount);
+        NotifyQuestShopPurchase();
+
         SetFeedback($"Purchased: Supply Pack x{supplyPackAmount}");
         RefreshUI();
     }
 
+    private void NotifyQuestShopPurchase()
+    {
+        if (QuestManager.Instance != null)
+        {
+            QuestManager.Instance.AddShopPurchaseProgress(1);
+        }
+    }
+
     private bool CanUseSession()
     {
-        if (GameSession.Instance != null)
-            return true;
+        if (GameSession.Instance != null) return true;
 
         SetFeedback("GameSession not found.");
         return false;
@@ -195,8 +209,7 @@ public class ShopManager : MonoBehaviour
 
     private void RefreshFallbackUI()
     {
-        if (goldText != null)
-            goldText.text = "Gold: 0";
+        if (goldText != null) goldText.text = "Gold: 0";
 
         if (healthPriceText != null)
             healthPriceText.text = $"Price: {healthUpgradeCost} Gold";
@@ -225,26 +238,22 @@ public class ShopManager : MonoBehaviour
 
     private void ShowHubPanel()
     {
-        if (hubPanel != null)
-            hubPanel.SetActive(true);
-
-        if (shopPanel != null)
-            shopPanel.SetActive(false);
+        if (hubPanel != null) hubPanel.SetActive(true);
+        if (shopPanel != null) shopPanel.SetActive(false);
     }
 
     private void ShowShopPanel()
     {
-        if (hubPanel != null)
-            hubPanel.SetActive(false);
-
-        if (shopPanel != null)
-            shopPanel.SetActive(true);
+        if (hubPanel != null) hubPanel.SetActive(false);
+        if (shopPanel != null) shopPanel.SetActive(true);
     }
 
     private void SetFeedback(string message)
     {
         if (feedbackText != null)
+        {
             feedbackText.text = message;
+        }
 
         Debug.Log($"[ShopManager] {message}");
     }
@@ -252,6 +261,8 @@ public class ShopManager : MonoBehaviour
     private void ClearFeedback()
     {
         if (feedbackText != null)
+        {
             feedbackText.text = string.Empty;
+        }
     }
 }

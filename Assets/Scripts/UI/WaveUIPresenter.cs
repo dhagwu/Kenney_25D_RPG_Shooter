@@ -8,12 +8,13 @@ public class WaveUIPresenter : MonoBehaviour
     [SerializeField] private EnemySpawner enemySpawner;
     [SerializeField] private TMP_Text waveText;
     [SerializeField] private TMP_Text waveStatusText;
-    [SerializeField] private GameObject victoryPanel;
+    [SerializeField] private BattleResultPanelPresenter battleResultPanelPresenter;
 
     [Header("Status Timing")]
     [SerializeField] private float statusDisplayTime = 2f;
 
     private Coroutine statusCoroutine;
+    private bool resultPanelShown;
 
     private void OnEnable()
     {
@@ -36,9 +37,16 @@ public class WaveUIPresenter : MonoBehaviour
             enemySpawner = FindFirstObjectByType<EnemySpawner>();
         }
 
-        if (victoryPanel != null)
+        if (battleResultPanelPresenter == null)
         {
-            victoryPanel.SetActive(false);
+            battleResultPanelPresenter = FindFirstObjectByType<BattleResultPanelPresenter>();
+        }
+
+        resultPanelShown = false;
+
+        if (battleResultPanelPresenter != null)
+        {
+            battleResultPanelPresenter.HideImmediately();
         }
 
         if (waveStatusText != null)
@@ -58,26 +66,55 @@ public class WaveUIPresenter : MonoBehaviour
     private void HandleWaveCleared(int currentWave, int maxWave)
     {
         RefreshWaveText(currentWave, maxWave);
+
+        // 关键兜底：
+        // 只要“当前清掉的是最后一波”，就直接打开结算面板，
+        // 不再完全依赖 OnAllWavesFinished 事件。
+        if (currentWave >= maxWave)
+        {
+            OpenBattleResultPanel("All Waves Cleared");
+            return;
+        }
+
         ShowStatusTemporarily($"Wave {currentWave} Cleared");
     }
 
     private void HandleAllWavesFinished()
     {
-        if (waveStatusText != null)
+        OpenBattleResultPanel("All Waves Cleared");
+    }
+
+    private void OpenBattleResultPanel(string statusMessage)
+    {
+        if (resultPanelShown) return;
+        resultPanelShown = true;
+
+        if (statusCoroutine != null)
         {
-            waveStatusText.text = "All Waves Cleared";
+            StopCoroutine(statusCoroutine);
+            statusCoroutine = null;
         }
 
-        if (victoryPanel != null)
+        if (waveStatusText != null)
         {
-            victoryPanel.SetActive(true);
+            waveStatusText.text = statusMessage;
         }
+
+        if (battleResultPanelPresenter != null)
+        {
+            battleResultPanelPresenter.ShowResultPanel();
+        }
+        else
+        {
+            Debug.LogWarning("[WaveUIPresenter] BattleResultPanelPresenter is missing.");
+        }
+
+        Debug.Log("[WaveUIPresenter] Battle result panel opened.");
     }
 
     private void RefreshWaveText()
     {
-        if (enemySpawner == null || waveText == null)
-            return;
+        if (enemySpawner == null || waveText == null) return;
 
         int current = Mathf.Max(enemySpawner.CurrentWave, 0);
         int max = Mathf.Max(enemySpawner.MaxWaveCount, 0);
@@ -86,16 +123,13 @@ public class WaveUIPresenter : MonoBehaviour
 
     private void RefreshWaveText(int currentWave, int maxWave)
     {
-        if (waveText == null)
-            return;
-
+        if (waveText == null) return;
         waveText.text = $"Wave {currentWave} / {maxWave}";
     }
 
     private void ShowStatusTemporarily(string message)
     {
-        if (waveStatusText == null)
-            return;
+        if (waveStatusText == null) return;
 
         if (statusCoroutine != null)
         {
@@ -109,7 +143,13 @@ public class WaveUIPresenter : MonoBehaviour
     {
         waveStatusText.text = message;
         yield return new WaitForSeconds(statusDisplayTime);
-        waveStatusText.text = "";
+
+        // 如果结果面板已经打开，就不要再清空最终状态提示
+        if (!resultPanelShown && waveStatusText != null)
+        {
+            waveStatusText.text = "";
+        }
+
         statusCoroutine = null;
     }
 }

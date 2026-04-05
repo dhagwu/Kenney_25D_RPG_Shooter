@@ -4,7 +4,8 @@ using System;
 public enum QuestType
 {
     KillEnemies,
-    CollectGold
+    CollectGold,
+    BuyShopItems
 }
 
 [Serializable]
@@ -13,10 +14,14 @@ public class QuestData
     public string questName;
     public string description;
     public QuestType questType;
+
     public int targetAmount;
     public int currentAmount;
+
     public int rewardGold;
     public int rewardBonusMaxHealth;
+    public int rewardSupplyCount;
+
     public bool isCompleted;
     public bool rewardClaimed;
 
